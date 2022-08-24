@@ -1,10 +1,11 @@
-package com.lexwilliam.hanzidict.ui.screen
+package com.lexwilliam.hanzidict.ui.screen.search
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -22,20 +24,25 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
-import com.lexwilliam.hanzidict.ui.theme.HanziDictTheme
+import androidx.compose.ui.unit.dp
+import com.lexwilliam.hanzidict.data.Hanzi
 
 @Composable
 fun SearchScreen(
+    viewModel: SearchViewModel,
     onBackPressed: () -> Unit
 ) {
-    var query by remember { mutableStateOf("") }
+    val items = viewModel.hanziList.collectAsState().value
+    val query = viewModel.query.collectAsState().value
     Column {
         SearchTopAppBar(
             query = query,
-            onQueryChange = { query = it },
+            onQueryChange = { viewModel.search(it) },
             onBackPressed = onBackPressed
         )
+        if (query != "") {
+            SearchResultList(items = items)
+        }
     }
 }
 
@@ -47,7 +54,7 @@ fun SearchTopAppBar(
     onBackPressed: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    var cursorColor  by remember { mutableStateOf(Color.Transparent) }
+    var cursorColor  by remember { mutableStateOf(Color.Black) }
     val focusRequester = FocusRequester()
     val keyboard = LocalSoftwareKeyboardController.current
     val isFocused by interactionSource.collectIsPressedAsState()
@@ -93,10 +100,38 @@ fun SearchTopAppBar(
     }
 }
 
-@Preview
 @Composable
-fun SearchScreenPreview() {
-    HanziDictTheme {
-        SearchScreen(onBackPressed = {})
+fun SearchResultList(
+    items: List<Hanzi>
+) {
+    LazyColumn(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+    ) {
+        items(items = items) { item ->
+            SearchResult(item = item)
+            Divider()
+        }
+        item {
+            Spacer(modifier = Modifier.padding(16.dp))
+        }
+    }
+}
+
+@Composable
+fun SearchResult(
+    item: Hanzi
+) {
+    Row(
+        modifier = Modifier
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(text = item.hanzi, style = MaterialTheme.typography.headlineSmall)
+        Column {
+            Text(text = item.pinyin, style = MaterialTheme.typography.titleMedium)
+            Text(text = item.definition, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }

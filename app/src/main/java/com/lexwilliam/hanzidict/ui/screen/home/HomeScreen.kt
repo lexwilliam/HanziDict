@@ -1,4 +1,4 @@
-package com.lexwilliam.hanzidict.ui.screen
+package com.lexwilliam.hanzidict.ui.screen.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,12 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lexwilliam.hanzidict.ui.theme.HanziDictTheme
+import java.io.InputStream
 
 @Composable
 fun HomeScreen(
     navToSearch: () -> Unit
 ) {
-
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -42,13 +42,5 @@ fun HomeScreen(
                 Text("Search")
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    HanziDictTheme {
-        HomeScreen(navToSearch = {})
     }
 }
