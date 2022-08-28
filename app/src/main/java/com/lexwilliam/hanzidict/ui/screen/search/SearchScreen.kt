@@ -1,5 +1,6 @@
 package com.lexwilliam.hanzidict.ui.screen.search
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -34,6 +35,8 @@ fun SearchScreen(
 ) {
     val items = viewModel.hanziList.collectAsState().value
     val query = viewModel.query.collectAsState().value
+    var hanzi by remember { mutableStateOf(Hanzi("", "", "", "") )}
+    var dialogState by remember { mutableStateOf(false)}
     Column {
         SearchTopAppBar(
             query = query,
@@ -41,8 +44,17 @@ fun SearchScreen(
             onBackPressed = onBackPressed
         )
         if (query != "") {
-            SearchResultList(items = items)
+            SearchResultList(
+                items = items,
+                onClick = {
+                    dialogState = true
+                    hanzi = it
+                }
+            )
         }
+    }
+    if(dialogState) {
+        HanziDialog(hanzi = hanzi, dialogState = dialogState, onDialogStateChange = { dialogState = it })
     }
 }
 
@@ -102,14 +114,15 @@ fun SearchTopAppBar(
 
 @Composable
 fun SearchResultList(
-    items: List<Hanzi>
+    items: List<Hanzi>,
+    onClick: (Hanzi) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
             .padding(horizontal = 16.dp)
     ) {
         items(items = items) { item ->
-            SearchResult(item = item)
+            SearchResult(item = item, onClick = onClick)
             Divider()
         }
         item {
@@ -120,11 +133,13 @@ fun SearchResultList(
 
 @Composable
 fun SearchResult(
-    item: Hanzi
+    item: Hanzi,
+    onClick: (Hanzi) -> Unit
 ) {
     Row(
         modifier = Modifier
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onClick(item) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -133,5 +148,39 @@ fun SearchResult(
             Text(text = item.pinyin, style = MaterialTheme.typography.titleMedium)
             Text(text = item.definition, style = MaterialTheme.typography.bodySmall)
         }
+    }
+}
+
+@Composable
+fun HanziDialog(
+    hanzi: Hanzi,
+    dialogState: Boolean,
+    onDialogStateChange: (Boolean) -> Unit
+) {
+
+    if (dialogState) {
+        AlertDialog(
+            onDismissRequest = {
+                // Dismiss the dialog when the user clicks outside the dialog or on the back
+                // button. If you want to disable that functionality, simply use an empty
+                // onDismissRequest.
+                onDialogStateChange(false)
+            },
+            title = {
+                Text(text = "${hanzi.hanzi} ${hanzi.pinyin}", style = MaterialTheme.typography.headlineLarge)
+            },
+            text = {
+                Text(text = hanzi.definition, style = MaterialTheme.typography.bodyLarge)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDialogStateChange(false)
+                    }
+                ) {
+                    Text("Dismiss")
+                }
+            }
+        )
     }
 }

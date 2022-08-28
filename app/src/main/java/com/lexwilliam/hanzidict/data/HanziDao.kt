@@ -9,11 +9,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HanziDao {
 
-    @Query("SELECT * FROM hanzi LIMIT 1")
+    @Query("SELECT * FROM hanzi_table LIMIT 1")
     suspend fun getOneItemFromDatabase(): Hanzi?
 
-    @Query("SELECT * FROM hanzi WHERE pinyinWithoutTone LIKE :q || '%'")
+    @Query("SELECT * FROM hanzi_table WHERE hanzi == :q OR pinyinWithoutTone LIKE :q || '%'")
     fun getSearchQuery(q: String): Flow<List<Hanzi>>
+
+    @Query("SELECT * FROM hanzi_table WHERE definition LIKE '%' || :q || '%'")
+    fun getSearcyQueryForDefinition(q: String): Flow<List<Hanzi>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHanzi(hanzi: Hanzi)

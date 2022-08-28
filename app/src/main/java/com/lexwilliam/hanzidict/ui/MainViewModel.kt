@@ -3,6 +3,7 @@ package com.lexwilliam.hanzidict.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lexwilliam.hanzidict.R
 import com.lexwilliam.hanzidict.data.Hanzi
 import com.lexwilliam.hanzidict.data.HanziRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,6 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,5 +47,28 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             hanziRepository.insertHanzi(item)
         }
+    }
+
+    fun readCsv(inputStream: InputStream) {
+
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        try {
+            var csvLine: String?
+            while (reader.readLine().also { csvLine = it } != null) {
+                if (csvLine != "") {
+                    val row = csvLine!!.split(",", limit = 4).toTypedArray()
+                    insertHanzi(Hanzi(row[0], row[1], row[2], row[3]))
+                }
+            }
+        } catch (ex: IOException) {
+            throw RuntimeException("Error in reading CSV file: $ex")
+        } finally {
+            try {
+                inputStream.close()
+            } catch (e: IOException) {
+                throw RuntimeException("Error while closing input stream: $e")
+            }
+        }
+        _isLoading.value = false
     }
 }

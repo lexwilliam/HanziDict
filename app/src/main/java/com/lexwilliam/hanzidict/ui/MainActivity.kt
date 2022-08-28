@@ -37,25 +37,7 @@ class MainActivity : ComponentActivity() {
                     if (isEmpty) {
                         val inputStream: InputStream =
                             resources.openRawResource(R.raw.chinese_dictionary_table)
-                        val reader = BufferedReader(InputStreamReader(inputStream))
-                        try {
-                            var csvLine: String?
-                            while (reader.readLine().also { csvLine = it } != null) {
-                                if (csvLine != "") {
-                                    val row = csvLine!!.split(",", limit = 4).toTypedArray()
-                                    viewModel.insertHanzi(Hanzi(row[0], row[1], row[2], row[3]))
-                                }
-                            }
-                        } catch (ex: IOException) {
-                            throw RuntimeException("Error in reading CSV file: $ex")
-                        } finally {
-                            try {
-                                inputStream.close()
-                            } catch (e: IOException) {
-                                throw RuntimeException("Error while closing input stream: $e")
-                            }
-                        }
-                        viewModel.onListFull()
+                        viewModel.readCsv(inputStream)
                     } else {
                         viewModel.onListFull()
                     }
@@ -65,15 +47,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val state = viewModel.isLoading.collectAsState()
             HanziDictTheme {
-                if (state.value) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
+                if (!state.value) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
